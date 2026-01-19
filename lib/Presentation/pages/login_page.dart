@@ -5,6 +5,7 @@ import 'package:flutter_login_token_authentication/Presentation/widgets/button_w
 import 'package:flutter_login_token_authentication/Presentation/widgets/login_textfield_widget.dart';
 import 'package:flutter_login_token_authentication/models/login_request_model.dart';
 import 'package:flutter_login_token_authentication/routes.dart';
+import 'package:flutter_login_token_authentication/utils/session_manager.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -17,6 +18,25 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   bool isObscure = true;
+  final sessionManager = SessionManager();
+
+  void redirectToHomePage() {
+    Navigator.pushReplacementNamed(context, MyRoutes.home.name);
+  }
+
+  void checkLogginSession() async {
+    final accessToken = await sessionManager.getAccessToken();
+
+    if (accessToken.isNotEmpty) {
+      redirectToHomePage();
+    }
+  }
+
+  @override
+  void initState() {
+    checkLogginSession();
+    super.initState();
+  }
 
   @override
   void dispose() {
@@ -72,7 +92,7 @@ class _LoginPageState extends State<LoginPage> {
                     listener: (context, state) {
                       if (state is LoginSuccess) {
                         // Navigate to home page
-                        Navigator.pushReplacementNamed(context, MyRoutes.home.name);
+                        redirectToHomePage();
                       } else if (state is LoginFailed) {
                         showDialog(
                           context: context, 

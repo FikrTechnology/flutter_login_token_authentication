@@ -8,3 +8,5 @@ final class Login extends LoginEvent {
 
   Login({required this.requestBody});
 }
+
+final class Logout extends LoginEvent {}
