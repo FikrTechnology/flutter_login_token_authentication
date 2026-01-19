@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_login_token_authentication/Presentation/bloc/login_bloc.dart';
 import 'package:flutter_login_token_authentication/Presentation/widgets/button_widget.dart';
 import 'package:flutter_login_token_authentication/Presentation/widgets/login_textfield_widget.dart';
+import 'package:flutter_login_token_authentication/models/login_request_model.dart';
 import 'package:flutter_login_token_authentication/routes.dart';
 
 class LoginPage extends StatefulWidget {
@@ -22,7 +25,6 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -37,26 +39,26 @@ class _LoginPageState extends State<LoginPage> {
                   const Text(
                     'Silahkan Login',
                     style: TextStyle(
-                      fontSize: 24,
+                      fontSize: 24, 
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 32),
                   LoginTextfieldWidget(
-                    labelText: "Username", 
-                    controller: usernameController, 
-                    keyboardType: TextInputType.text, 
-                    textInputAction: TextInputAction.next, 
-                    obscureText: false, 
-                    hasSuffix: false
+                    labelText: "Username",
+                    controller: usernameController,
+                    keyboardType: TextInputType.text,
+                    textInputAction: TextInputAction.next,
+                    obscureText: false,
+                    hasSuffix: false,
                   ),
                   const SizedBox(height: 16),
                   LoginTextfieldWidget(
-                    labelText: "Password", 
-                    controller: passwordController, 
-                    keyboardType: TextInputType.text, 
-                    textInputAction: TextInputAction.done, 
-                    obscureText: isObscure, 
+                    labelText: "Password",
+                    controller: passwordController,
+                    keyboardType: TextInputType.text,
+                    textInputAction: TextInputAction.done,
+                    obscureText: isObscure,
                     hasSuffix: true,
                     onSuffixPressed: () {
                       setState(() {
@@ -64,17 +66,54 @@ class _LoginPageState extends State<LoginPage> {
                       });
                     },
                   ),
-              
+
                   const SizedBox(height: 32),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: ButtonWidget(
-                      onPressed: () {
+                  BlocConsumer<LoginBloc, LoginState>(
+                    listener: (context, state) {
+                      if (state is LoginSuccess) {
+                        // Navigate to home page
                         Navigator.pushReplacementNamed(context, MyRoutes.home.name);
-                      }, 
-                      text: "Login"
-                    ),
+                      } else if (state is LoginFailed) {
+                        showDialog(
+                          context: context, 
+                          builder: (_) {
+                            return AlertDialog(
+                              title: const Text("Login Failed"),
+                              content: Text(state.errorMessage),
+                              actions: [
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  }, 
+                                  child: const Text("OK")
+                                )
+                              ],
+                            );
+                          }
+                        );
+                      }
+                    },
+                    builder: (context, state) {
+                      if (state is LoginLoading) {
+                        return const CircularProgressIndicator();
+                      }
+                      return SizedBox(
+                        width: double.infinity,
+                        height: 48,
+                        child: ButtonWidget(
+                          onPressed: () {
+                            final requestBody = LoginRequestModel(
+                              username: usernameController.text, 
+                              password: passwordController.text, 
+                              expiresInMins: 30
+                            );
+
+                            context.read<LoginBloc>().add(Login(requestBody: requestBody));
+                          }, 
+                          text: "Login",
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
